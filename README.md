@@ -58,14 +58,11 @@ go build -o bin/wicos64-tray.exe ./cmd/wicos64-tray
 PDFs liegen unter `./Docs` (DE/EN), z.B. Admin-Guide und API-Dokumentation.
 
 ## Lizenz
-
-Aktuell ist **keine** Lizenzdatei (`LICENSE`) enthalten.
-Wenn du das Repo öffentlich als Open Source teilen willst, solltest du eine passende Lizenz hinzufügen.
+MIT License © 2026 TheRealWanderer
 
 ## Third‑party
 
 Enthält **Chart.js** (MIT) als eingebettete statische Datei (`internal/server/static/chart.umd.min.js`, Lizenzhinweis steht im Header).
 ##
 
-## License
-MIT License © 2026 TheRealWanderer
+
