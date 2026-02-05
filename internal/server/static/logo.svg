@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="260" height="64" viewBox="0 0 260 64" role="img" aria-label="WiCOS64">
+  <defs>
+    <style>
+      .fg { fill: #E6E6E6; }
+      .stroke { stroke: #E6E6E6; stroke-width: 2.2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+      .wifi { stroke: #9FB6D8; stroke-width: 2.2; fill: none; stroke-linecap: round; }
+      .wifiDot { fill: #9FB6D8; }
+      .txt { fill: #E6E6E6; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+             font-weight: 800; font-size: 26px; letter-spacing: 0.5px; }
+      .sub { fill: #9FB6D8; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+             font-weight: 700; font-size: 10px; letter-spacing: 1.6px; }
+    </style>
+  </defs>
+
+  <!-- ICON: 5.25" disk -->
+  <g transform="translate(8,8)">
+    <!-- outer body -->
+    <rect x="0" y="0" width="44" height="44" rx="5" class="fg" opacity="0.18"/>
+    <rect x="1.8" y="1.8" width="40.4" height="40.4" rx="4.2" class="stroke" opacity="0.92"/>
+
+    <!-- hub ring + hole (center = 22,22) -->
+    <circle cx="22" cy="22" r="8.2" class="stroke" opacity="0.92"/>
+    <circle cx="22" cy="22" r="6.0" fill="#0d1b3a" opacity="0.96"/>
+
+    <!-- vertical slot: centered, above ring -->
+    <rect x="19" y="3.2" width="6" height="9.0" rx="2.2" class="fg" opacity="0.85"/>
+
+    <!-- WiFi inside hole (scaled to 0.8; kept strictly inside r=6.0 with some air) -->
+    <g transform="translate(22,22)">
+      <path d="M-3.68 -0.64 C -1.68 -2.48, 1.68 -2.48, 3.68 -0.64" class="wifi"/>
+      <path d="M-2.56  1.04 C -1.20  0.00, 1.20  0.00, 2.56  1.04" class="wifi" opacity="0.95"/>
+      <path d="M-1.28  2.72 C -0.56  2.24, 0.56  2.24, 1.28  2.72" class="wifi" opacity="0.9"/>
+      <circle cx="0" cy="3.84" r="0.96" class="wifiDot"/>
+    </g>
+  </g>
+
+  <!-- TEXT -->
+  <text x="72" y="38" class="txt">WiCOS64</text>
+  <text x="74" y="52" class="sub">REMOTE STORAGE</text>
+</svg>

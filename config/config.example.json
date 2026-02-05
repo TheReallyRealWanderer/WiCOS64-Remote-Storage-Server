@@ -1,0 +1,84 @@
+{
+  "listen": ":8080",
+  "endpoint": "/wicos64/api",
+  "base_path": "./wicos64-data",
+  "token": "",
+  "token_roots": {},
+  "tokens": [
+    {
+      "token": "WICOS64_DEV1",
+      "name": "C64 #1",
+      "root": "dev1"
+    },
+    {
+      "token": "WICOS64_DEV2",
+      "name": "C64 #2",
+      "root": "dev2",
+      "read_only": true,
+      "quota_bytes": 104857600,
+      "max_file_bytes": 10485760,
+      "disk_images_enabled": false
+    }
+  ],
+  "global_read_only": false,
+  "global_quota_bytes": 0,
+  "global_max_file_bytes": 0,
+  "max_payload": 16384,
+  "max_chunk": 4096,
+  "max_path": 255,
+  "max_name": 64,
+  "max_entries": 50,
+  "enable_mkdir_parents": true,
+  "enable_rmdir_recursive": true,
+  "enable_cp_recursive": true,
+  "enable_overwrite": true,
+  "enable_errmsg": true,
+  "create_recommended_dirs": true,
+  "server_name": "wicos64-server",
+  "enable_admin_ui": true,
+  "admin_allow_remote": false,
+  "admin_user": "admin",
+  "admin_password": "",
+  "log_requests": true,
+  "bootstrap": {
+    "enabled": false,
+    "allow_get": true,
+    "allow_post": true,
+    "token": "RETROBOOT",
+    "lan_only": true,
+    "unknown_mac_policy": "deny",
+    "mac_tokens": {
+      "112233445566": "WICOS64_DEV2",
+      "AABBCCDDEEFF": "WICOS64_DEV1"
+    },
+    "mac_extra": {
+      "AABBCCDDEEFF": {
+        "default_cwd": "/USR",
+        "ui_profile": "classic"
+      }
+    }
+  },
+  "discovery": {
+    "enabled": true,
+    "udp_port": 6464,
+    "lan_only": true,
+    "rate_limit_per_sec": 5
+  },
+  "compat": {
+    "fallback_prg_extension": true,
+    "wildcard_load": true
+  },
+  "disk_images_enabled": true,
+  "disk_images_write_enabled": false,
+  "disk_images_auto_resize_enabled": false,
+  "tmp_cleanup_enabled": true,
+  "tmp_cleanup_interval_sec": 900,
+  "tmp_cleanup_max_age_sec": 86400,
+  "tmp_cleanup_delete_empty_dirs": true,
+  "trash_enabled": false,
+  "trash_dir": ".TRASH",
+  "trash_cleanup_enabled": false,
+  "trash_cleanup_interval_sec": 21600,
+  "trash_cleanup_max_age_sec": 604800,
+  "trash_cleanup_delete_empty_dirs": true
+}
