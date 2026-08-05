@@ -1,0 +1,209 @@
+name: Temporary WiC64 Firmware Build 1A
+
+on:
+  push:
+    branches:
+      - tmp/wic64-build-1a-20260805
+    paths:
+      - .tmp-wic64-build-1a-trigger
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: espressif/idf:v4.4.8
+      options: --user 0
+
+    steps:
+      - name: Checkout temporary build harness
+        uses: actions/checkout@v4
+
+      - name: Reconstruct and verify source patches
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/wic64-patches
+          cat .tmp-wic64-build-1a/patch.*.b64 | base64 -d > /tmp/wic64-build1a-build-patches.tar.xz
+          echo "96ff984c1f10b609bcc0e1305333eccd35a33c108f970eff6d094ac0eddb74d0  /tmp/wic64-build1a-build-patches.tar.xz" | sha256sum -c -
+          tar -xJf /tmp/wic64-build1a-build-patches.tar.xz -C /tmp/wic64-patches
+          echo "7e67068353a1274a82fd130580d5f64e857c84d36063bc22001e01d07928ce26  /tmp/wic64-patches/project.patch" | sha256sum -c -
+          echo "67e510c3284e98cefc4f494234b0ff0fafad0b60eb63b02603b0aedd53875e3e  /tmp/wic64-patches/dependencies.patch" | sha256sum -c -
+          cat /tmp/wic64-patches/MANIFEST.txt
+
+      - name: Checkout exact WiC64 baseline and submodules
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config --global --add safe.directory '*'
+          git clone https://github.com/WiC64-Team/wic64-firmware.git wic64
+          git -C wic64 checkout d0991a53037982f1e2903e888bfefeb84577eedc
+          git -C wic64 submodule update --init --recursive
+          test "$(git -C wic64 rev-parse HEAD)" = "d0991a53037982f1e2903e888bfefeb84577eedc"
+          test "$(git -C wic64/components/arduino rev-parse HEAD)" = "213f9769ab21c68e3434e8e9037859de0cfc6441"
+
+      - name: Apply and verify Build 1A project patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git -C wic64 apply --check --whitespace=nowarn /tmp/wic64-patches/project.patch
+          git -C wic64 apply --whitespace=nowarn /tmp/wic64-patches/project.patch
+          grep -q 'response()->appendByte(0x1A)' wic64/wic64/commands/wps.cpp
+          echo "9f53875332c634213ff9293c7551a90a91f1825113c1002e5926c82df25a1db7  wic64/version.cmake" | sha256sum -c -
+          echo "73c1c52d301b104e22804c169aa877f72c59285dec7d3546796d416c130e952e  wic64/generated-version.h" | sha256sum -c -
+          echo "e97e0ca14334ad852d783c83ffd5a02754a8449f24db3e15a8a129e3dc6e20a4  wic64/wic64/commands/wps.cpp" | sha256sum -c -
+          echo "c7fbe1088a22168901dd6e4c390639044399a9f7fa40a4bb1475e6722d40d7f2  wic64/partitions.csv" | sha256sum -c -
+          echo "104057262b083ec5b00d1459c254da6d78ad9795e2ac4531863485c19028c767  wic64/sdkconfig" | sha256sum -c -
+
+      - name: Apply and verify exact dependency patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          DEPS=/tmp/wic64-deps
+          rm -rf "$DEPS"
+          mkdir -p \
+            "$DEPS/idf/components/wpa_supplicant/esp_supplicant/src" \
+            "$DEPS/idf/components/wpa_supplicant/src/wps" \
+            "$DEPS/arduino/libraries/WiFi/src"
+
+          cp "$IDF_PATH/components/wpa_supplicant/esp_supplicant/src/esp_wps.c" \
+             "$DEPS/idf/components/wpa_supplicant/esp_supplicant/src/esp_wps.c"
+          cp "$IDF_PATH/components/wpa_supplicant/src/wps/wps.c" \
+             "$DEPS/idf/components/wpa_supplicant/src/wps/wps.c"
+          cp "$IDF_PATH/components/wpa_supplicant/src/wps/wps.h" \
+             "$DEPS/idf/components/wpa_supplicant/src/wps/wps.h"
+          cp wic64/components/arduino/libraries/WiFi/src/WiFiGeneric.cpp \
+             "$DEPS/arduino/libraries/WiFi/src/WiFiGeneric.cpp"
+
+          cd "$DEPS"
+          echo "4d099216f60fa6c1472674774b474ee961c2f94765fdd17e6c45220095111356  arduino/libraries/WiFi/src/WiFiGeneric.cpp" | sha256sum -c -
+          echo "a996c0de9cbc4f86a13a1b972e7edf60922daec3eb55f4cef487e52f2a19516c  idf/components/wpa_supplicant/esp_supplicant/src/esp_wps.c" | sha256sum -c -
+          echo "aad7c478f71f56bfbbbc2cd99fa5ef8f4942bab43b02d572a36b0539cbcff155  idf/components/wpa_supplicant/src/wps/wps.c" | sha256sum -c -
+          echo "b9d87bbd42e3e577814d7949d8c971d1da7118ab01c86bdfb9aa5f6946d354a1  idf/components/wpa_supplicant/src/wps/wps.h" | sha256sum -c -
+
+          git init -q
+          git config user.email build@example.invalid
+          git config user.name 'Temporary WiC64 Builder'
+          git add .
+          git commit -qm baseline
+          git apply --check --whitespace=nowarn /tmp/wic64-patches/dependencies.patch
+          git apply --whitespace=nowarn /tmp/wic64-patches/dependencies.patch
+
+          echo "b27e129b70e7ce5b3ef7e1133a87775355a389a90793c1fb7fe1b53c014d9e3d  arduino/libraries/WiFi/src/WiFiGeneric.cpp" | sha256sum -c -
+          echo "772d0762279279d3dad9db02510490344e5bcedd0a96774229a5bfe55f5c54de  idf/components/wpa_supplicant/esp_supplicant/src/esp_wps.c" | sha256sum -c -
+          echo "3af750229e48af1c68133bf63726a415da92a5292a9f7f3a741906c0503e2615  idf/components/wpa_supplicant/src/wps/wps.c" | sha256sum -c -
+          echo "a96ff6a21eaf8fbb5001fa589f7191a9e7c5154cfeef3f2ce8e75aee71c6244a  idf/components/wpa_supplicant/src/wps/wps.h" | sha256sum -c -
+          grep -q 'os_memset(sm->config.bssid, 0, ETH_ALEN);' idf/components/wpa_supplicant/esp_supplicant/src/esp_wps.c
+          test "$(grep -c 'sm->config.bssid_set = 0;' idf/components/wpa_supplicant/esp_supplicant/src/esp_wps.c)" -ge 2
+          grep -q 'first_connect && WiFi.getAutoReconnect()' arduino/libraries/WiFi/src/WiFiGeneric.cpp
+
+          cp idf/components/wpa_supplicant/esp_supplicant/src/esp_wps.c \
+             "$IDF_PATH/components/wpa_supplicant/esp_supplicant/src/esp_wps.c"
+          cp idf/components/wpa_supplicant/src/wps/wps.c \
+             "$IDF_PATH/components/wpa_supplicant/src/wps/wps.c"
+          cp idf/components/wpa_supplicant/src/wps/wps.h \
+             "$IDF_PATH/components/wpa_supplicant/src/wps/wps.h"
+          cp arduino/libraries/WiFi/src/WiFiGeneric.cpp \
+             "$GITHUB_WORKSPACE/wic64/components/arduino/libraries/WiFi/src/WiFiGeneric.cpp"
+
+      - name: Build firmware with ESP-IDF 4.4.8
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd wic64
+          rm -rf .git build
+          find components -maxdepth 2 -name .git -type f -delete || true
+          idf.py --version | tee /tmp/idf-version.txt
+          idf.py build 2>&1 | tee /tmp/wic64-build.log
+          idf.py size 2>&1 | tee /tmp/wic64-size.log
+          test -s build/wic64.bin
+          test -s build/wic64.elf
+          test -s build/wic64.map
+
+      - name: Validate ESP32 image and partition fit
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd wic64
+          APP_SIZE=$(stat -c '%s' build/wic64.bin)
+          SLOT_SIZE=$((0x110000))
+          test "$APP_SIZE" -lt "$SLOT_SIZE"
+          python "$IDF_PATH/components/esptool_py/esptool/esptool.py" --chip esp32 image_info build/wic64.bin | tee /tmp/wic64-image-info.txt
+          python - <<'PY'
+          from pathlib import Path
+          import struct
+          p = Path('build/wic64.bin')
+          b = p.read_bytes()
+          assert len(b) > 32, 'image is too small'
+          assert b[0] == 0xE9, f'invalid ESP32 image magic: {b[0]:02x}'
+          segments = b[1]
+          assert 1 <= segments <= 16, f'invalid segment count: {segments}'
+          entry = struct.unpack_from('<I', b, 4)[0]
+          off = 24
+          parsed = []
+          for index in range(segments):
+              assert off + 8 <= len(b), f'truncated segment header {index}'
+              load_addr, size = struct.unpack_from('<II', b, off)
+              off += 8
+              assert size >= 0 and off + size <= len(b), f'truncated segment {index}'
+              parsed.append((load_addr, size))
+              off += size
+          print(f'ESP32 magic: 0x{b[0]:02X}')
+          print(f'Segments: {segments}')
+          print(f'Entry point: 0x{entry:08X}')
+          print(f'Parsed data end: {off}')
+          for i, (addr, size) in enumerate(parsed):
+              print(f'Segment {i}: load=0x{addr:08X}, size={size}')
+          PY
+
+      - name: Prepare firmware artifact and build report
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$GITHUB_WORKSPACE/wic64-build1a-output"
+          mkdir -p "$OUT"
+          cp wic64/build/wic64.bin "$OUT/wic64-firmware-v2.3.0-Build-1A.bin"
+          cp wic64/build/wic64.elf "$OUT/wic64-firmware-v2.3.0-Build-1A.elf"
+          cp wic64/build/wic64.map "$OUT/wic64-firmware-v2.3.0-Build-1A.map"
+          cp wic64/build/bootloader/bootloader.bin "$OUT/bootloader.bin"
+          cp wic64/build/partition_table/partition-table.bin "$OUT/partition-table.bin"
+          cp /tmp/wic64-build.log "$OUT/build.log"
+          cp /tmp/wic64-size.log "$OUT/size.log"
+          cp /tmp/wic64-image-info.txt "$OUT/image-info.txt"
+
+          BUILD_UTC=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          BUILD_MESZ=$(TZ=Europe/Berlin date '+%Y-%m-%d %H:%M:%S %Z')
+          APP_SIZE=$(stat -c '%s' "$OUT/wic64-firmware-v2.3.0-Build-1A.bin")
+          SLOT_SIZE=$((0x110000))
+          APP_SHA=$(sha256sum "$OUT/wic64-firmware-v2.3.0-Build-1A.bin" | awk '{print $1}')
+          IDF_VERSION=$(cat /tmp/idf-version.txt)
+          {
+            echo 'WiC64 firmware Build 1A build report'
+            echo "Build time: $BUILD_MESZ"
+            echo "Build time UTC: $BUILD_UTC"
+            echo "WiC64 baseline commit: d0991a53037982f1e2903e888bfefeb84577eedc"
+            echo "Arduino-ESP32 commit: 213f9769ab21c68e3434e8e9037859de0cfc6441"
+            echo "ESP-IDF: $IDF_VERSION"
+            echo "Patch bundle SHA256: 96ff984c1f10b609bcc0e1305333eccd35a33c108f970eff6d094ac0eddb74d0"
+            echo "Project patch SHA256: 7e67068353a1274a82fd130580d5f64e857c84d36063bc22001e01d07928ce26"
+            echo "Dependencies patch SHA256: 67e510c3284e98cefc4f494234b0ff0fafad0b60eb63b02603b0aedd53875e3e"
+            echo "Application size: $APP_SIZE bytes"
+            echo "OTA slot size: $SLOT_SIZE bytes"
+            echo "OTA free space: $((SLOT_SIZE - APP_SIZE)) bytes"
+            echo "Application SHA256: $APP_SHA"
+            echo 'Internal diagnostics build byte: 0x1A'
+            echo 'WPS diagnostics schema: 0x07'
+            echo 'Effective station BSSID pin before targeted association: 0'
+          } > "$OUT/build-report.txt"
+          (cd "$OUT" && sha256sum * > SHA256SUMS.txt)
+          cat "$OUT/build-report.txt"
+
+      - name: Upload compiled firmware artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wic64-firmware-build-1a
+          path: wic64-build1a-output/
+          if-no-files-found: error
+          retention-days: 1
