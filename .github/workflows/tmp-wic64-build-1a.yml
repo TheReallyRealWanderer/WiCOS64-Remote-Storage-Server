@@ -27,7 +27,7 @@ jobs:
           set -euo pipefail
           mkdir -p /tmp/wic64-patches
           cat .tmp-wic64-build-1a/patch.*.b64 | base64 -d > /tmp/wic64-build1a-build-patches.tar.xz
-          echo "96ff984c1f10b609bcc0e1305333eccd35a33c108f970eff6d094ac0eddb74d0  /tmp/wic64-build1a-build-patches.tar.xz" | sha256sum -c -
+          echo "6f1ecf1232353d963773642d21ac30ab59a5a80b11665becdf5f751309b06a78  /tmp/wic64-build1a-build-patches.tar.xz" | sha256sum -c -
           tar -xJf /tmp/wic64-build1a-build-patches.tar.xz -C /tmp/wic64-patches
           echo "7e67068353a1274a82fd130580d5f64e857c84d36063bc22001e01d07928ce26  /tmp/wic64-patches/project.patch" | sha256sum -c -
           echo "67e510c3284e98cefc4f494234b0ff0fafad0b60eb63b02603b0aedd53875e3e  /tmp/wic64-patches/dependencies.patch" | sha256sum -c -
@@ -186,7 +186,7 @@ jobs:
             echo "WiC64 baseline commit: d0991a53037982f1e2903e888bfefeb84577eedc"
             echo "Arduino-ESP32 commit: 213f9769ab21c68e3434e8e9037859de0cfc6441"
             echo "ESP-IDF: $IDF_VERSION"
-            echo "Patch bundle SHA256: 96ff984c1f10b609bcc0e1305333eccd35a33c108f970eff6d094ac0eddb74d0"
+            echo "Patch bundle SHA256: 6f1ecf1232353d963773642d21ac30ab59a5a80b11665becdf5f751309b06a78"
             echo "Project patch SHA256: 7e67068353a1274a82fd130580d5f64e857c84d36063bc22001e01d07928ce26"
             echo "Dependencies patch SHA256: 67e510c3284e98cefc4f494234b0ff0fafad0b60eb63b02603b0aedd53875e3e"
             echo "Application size: $APP_SIZE bytes"
