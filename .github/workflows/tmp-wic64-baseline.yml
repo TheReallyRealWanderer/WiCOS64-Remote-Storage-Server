@@ -1,0 +1,41 @@
+name: Temporary WiC64 baseline export
+
+on:
+  push:
+    branches:
+      - tmp/wic64-build-1a-20260805
+    paths:
+      - .tmp-wic64-baseline-trigger
+
+permissions:
+  contents: read
+
+jobs:
+  export-baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout official WiC64 baseline
+        uses: actions/checkout@v4
+        with:
+          repository: WiC64-Team/wic64-firmware
+          ref: d0991a53037982f1e2903e888bfefeb84577eedc
+          submodules: false
+          path: baseline
+
+      - name: Pack baseline without Git metadata and large documentation asset
+        run: |
+          set -euo pipefail
+          tar --exclude='baseline/.git' \
+              --exclude='baseline/assets' \
+              -czf wic64-baseline-2.1.0.tar.gz baseline
+          sha256sum wic64-baseline-2.1.0.tar.gz | tee baseline-sha256.txt
+
+      - name: Upload baseline artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wic64-baseline-2.1.0
+          path: |
+            wic64-baseline-2.1.0.tar.gz
+            baseline-sha256.txt
+          if-no-files-found: error
+          retention-days: 1
