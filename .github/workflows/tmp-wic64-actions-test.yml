@@ -1,0 +1,21 @@
+name: Temporary WiC64 build harness test
+
+on:
+  push:
+    branches:
+      - tmp/wic64-build-1a-20260805
+    paths:
+      - .tmp-wic64-actions-test-trigger
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify runner
+        run: |
+          set -euo pipefail
+          echo "GitHub Actions runner is available"
+          uname -a
